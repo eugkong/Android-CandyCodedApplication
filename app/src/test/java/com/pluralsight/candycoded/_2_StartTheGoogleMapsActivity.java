@@ -1,40 +1,48 @@
 package com.pluralsight.candycoded;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
-import androidx.appcompat.app.AppCompatActivity;
 import android.view.View;
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.pluralsight.candycoded.util.IntentUtils;
+
 import junit.framework.Assert;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
-
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserFactory;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.booleanThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-
-
-
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
 
 //@FixMethodOrder(MethodSorters.NAME_ASCENDING)
-@PrepareForTest({AppCompatActivity.class, Intent.class, Uri.class, InfoActivity.class})
+@PrepareForTest({
+        AppCompatActivity.class,
+        InfoActivity.class,
+        Intent.class,
+        Uri.class,
+        IntentUtils.class
+})
 @RunWith(PowerMockRunner.class)
 public class _2_StartTheGoogleMapsActivity {
     public static final String LAYOUT_XML_FILE = "res/layout/activity_info.xml";
@@ -45,7 +53,6 @@ public class _2_StartTheGoogleMapsActivity {
     private static boolean resolve_activity = false;
     private static boolean called_startActivity_correctly = false;
     private static InfoActivity infoActivity;
-
 
     // Mockito setup
     @BeforeClass
@@ -65,7 +72,6 @@ public class _2_StartTheGoogleMapsActivity {
             // Do not allow super.onCreate() to be called, as it throws errors before the user's code.
             PowerMockito.suppress(PowerMockito.methodsDeclaredIn(AppCompatActivity.class));
 
-
             // PROBLEM - this is not helping to make the mapIntent not null in createMapIntent()
             PowerMockito.whenNew(Intent.class).withAnyArguments().thenReturn(intent);
 
@@ -81,31 +87,37 @@ public class _2_StartTheGoogleMapsActivity {
             PowerMockito.mockStatic(Uri.class);
             PowerMockito.when(Uri.class, "parse", "geo:0,0?q=618 E South St Orlando, FL 32801").thenReturn(mockUri);
 
+            PowerMockito.mockStatic(IntentUtils.class);
+            PowerMockito.when(IntentUtils.class, "hasResolvedActivity", eq(infoActivity), (Intent) any()).thenReturn(true);
+
             try {
                 //infoActivity.createMapIntent(null);
-                Method myMethod =  InfoActivity.class
+                Method myMethod = InfoActivity.class
                         .getMethod("createMapIntent", View.class);
                 Object[] param = {null};
                 myMethod.invoke(infoActivity, param);
             } catch (Throwable e) {
                 //e.printStackTrace();
             }
+
             PowerMockito.verifyStatic(Uri.class);
             Uri.parse("geo:0,0?q=618 E South St Orlando, FL 32801"); // This has to come on the line after mockStatic
             called_uri_parse = true;
 
             PowerMockito.verifyNew(Intent.class, Mockito.atLeastOnce()).
-                    withArguments(Mockito.eq(Intent.ACTION_VIEW), Mockito.eq(mockUri));
+                    withArguments(eq(Intent.ACTION_VIEW), eq(mockUri));
             created_intent = true;
-
 
             verify(intent).setPackage("com.google.android.apps.maps");
             set_package = true;
 
-            verify(intent).resolveActivity(mockPackageManager);
+//            verify(intent).resolveActivity(mockPackageManager);
+            PowerMockito.verifyStatic(IntentUtils.class);
+            IntentUtils.hasResolvedActivity(eq(infoActivity), (Intent) any());
             resolve_activity = true;
 
-            Mockito.verify(infoActivity).startActivity(Mockito.eq(intent));
+//            Mockito.verify(infoActivity).startActivity(eq(intent));
+            Mockito.verify(infoActivity).startActivity((Intent) any());
             called_startActivity_correctly = true;
 
 
@@ -149,7 +161,7 @@ public class _2_StartTheGoogleMapsActivity {
         Method myMethod = null;
 
         try {
-            myMethod =  InfoActivity.class
+            myMethod = InfoActivity.class
                     .getMethod("createMapIntent", View.class);
         } catch (NoSuchMethodException e) {
             //e.printStackTrace();
@@ -163,9 +175,7 @@ public class _2_StartTheGoogleMapsActivity {
         ArrayList<XMLTestHelpers.ViewContainer> viewContainers = readLayoutXML(LAYOUT_XML_FILE);
         XMLTestHelpers.ViewContainer addressView =
                 new XMLTestHelpers.ViewContainer("@+id/text_view_address", "createMapIntent", "true");
-        boolean address_set_correct =  viewContainers.contains(addressView);
-
-
+        boolean address_set_correct = viewContainers.contains(addressView);
 
         Assert.assertTrue("In activity_info.xml, the TextView text_view_address does not have " +
                         "the clickable and onClick properties set.",
@@ -176,10 +186,10 @@ public class _2_StartTheGoogleMapsActivity {
         InputStream inputStream = null;
 
         ArrayList<XMLTestHelpers.ViewContainer>
-            viewContainers = new ArrayList<XMLTestHelpers.ViewContainer>();
+                viewContainers = new ArrayList<>();
 
         try {
-            Class thisClass = this.getClass();
+            Class<?> thisClass = this.getClass();
             ClassLoader classLoader = thisClass.getClassLoader();
             inputStream = classLoader.getResourceAsStream("res/layout/activity_info.xml");
 
