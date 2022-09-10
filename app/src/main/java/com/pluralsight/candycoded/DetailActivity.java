@@ -1,14 +1,21 @@
 package com.pluralsight.candycoded;
 
+import static android.content.Intent.ACTION_SEND;
+import static android.content.Intent.EXTRA_TEXT;
+
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import androidx.appcompat.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.pluralsight.candycoded.DB.CandyContract;
 import com.pluralsight.candycoded.DB.CandyContract.CandyEntry;
 import com.pluralsight.candycoded.DB.CandyDbHelper;
@@ -43,7 +50,7 @@ public class DetailActivity extends AppCompatActivity {
                     CandyEntry.COLUMN_NAME_IMAGE));
             String candyDesc = cursor.getString(cursor.getColumnIndexOrThrow(
                     CandyEntry.COLUMN_NAME_DESC));
-
+            cursor.close();
 
             TextView textView = (TextView) this.findViewById(R.id.text_view_name);
             textView.setText(candyName);
@@ -70,4 +77,19 @@ public class DetailActivity extends AppCompatActivity {
     // ***
     // TODO - Task 4 - Share the Current Candy with an Intent
     // ***
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        createShareIntent();
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void createShareIntent() {
+//        final Intent shareIntent = new Intent(ACTION_SEND)
+//                .setType("text/plain")
+//                .putExtra(EXTRA_TEXT, SHARE_DESCRIPTION + mCandyImageUrl + HASHTAG_CANDYCODED);
+        final Intent shareIntent = new Intent(ACTION_SEND);
+        shareIntent.setType("text/plain");
+        shareIntent.putExtra(EXTRA_TEXT, SHARE_DESCRIPTION + mCandyImageUrl + HASHTAG_CANDYCODED);
+        startActivity(shareIntent);
+    }
 }
